@@ -1,0 +1,218 @@
+#library
+library(frontier)
+library(plm)
+library(rDEA)
+library(ucminf)
+library(lpSolveAPI)
+library(Benchmarking)
+
+#Profit_Public
+sfa_dat_P_Pub <- read.table("G:\\Apu_Data\\Cobb&Translog\\Profit_Public.csv",sep=',',header=T)
+str(sfa_dat_P_Pub)
+attach(sfa_dat_P_Pub)
+#Managing Data 
+sfa_dat_P_Pub$Profitlog_P_Pub <- log(sfa_dat_P_Pub$Profit)
+sfa_dat_P_Pub$Loanlog_P_Pub <- log(sfa_dat_P_Pub$LOAN)
+sfa_dat_P_Pub$OffBalanceSheetItemlog_P_Pub <- log(sfa_dat_P_Pub$OffBalanceSheetItem)
+sfa_dat_P_Pub$OtherEarningAssetslog_P_Pub <- log(sfa_dat_P_Pub$OtherEarningAssets)
+sfa_dat_P_Pub$POFlog_P_Pub <- log(sfa_dat_P_Pub$POF)
+sfa_dat_P_Pub$POFAlog_P_Pub <- log(sfa_dat_P_Pub$POFA)
+sfa_dat_P_Pub$POLlog_P_Pub <- log(sfa_dat_P_Pub$POL)
+sfa_dat_P_Pub$NonInterestIncomelog_P_Pub <- log(sfa_dat_P_Pub$NonInterestIncome)
+sfa_dat_P_Pub$NonPerformingLoanlog_P_Pub <- log(sfa_dat_P_Pub$NonPerformingLoan)
+sfa_dat_P_Pub$ReturnOnAssetslog_P_Pub <- log(sfa_dat_P_Pub$ReturnOnAssets)
+sfa_dat_P_Pub$ReturnOnEquitylog_P_Pub <- log(sfa_dat_P_Pub$ReturnOnEquity)
+sfa_dat_P_Pub$CapitalAdequacyRatiolog_P_Pub <- log(sfa_dat_P_Pub$CapitalAdequacyRatio)
+sfa_dat_P_Pub$OperatingCostlog_P_Pub <- log(sfa_dat_P_Pub$OperatingCost)
+
+# Cobb-Douglas production frontier
+sfa_Panel_P_Pub <- pdata.frame(sfa_dat_P_Pub, c( "ï..bank", "time" ))
+
+cobbDouglas_P_Pub <- frontier::sfa(Profitlog_P_Pub ~ Loanlog_P_Pub + OffBalanceSheetItemlog_P_Pub 
+                                   +  POFlog_P_Pub + POFAlog_P_Pub + POLlog_P_Pub , data = sfa_Panel_P_Pub,timeEffect = T)
+
+summary(cobbDouglas_P_Pub)
+
+summary( cobbDouglas_P_Pub, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
+
+library(nadiv)
+
+# estimate the translog function (prob)
+translog_P_Pub <- frontierQuad( yName = "Profitlog_P_Pub",
+            xName = c( "Loanlog_P_Pub", "OffBalanceSheetItemlog_P_Pub",
+                        "POFlog_P_Pub", "POFAlog_P_Pub", "POLlog_P_Pub"), data = sfa_Panel_P_Pub)
+
+summary(translog_P_Pub)
+
+summary( translog_P_Pub, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
+lrtest(translog_P_Pub,cobbDouglas_P_Pub)
+
+#Profit_Private
+sfa_dat_P_Pri <- read.table("G:\\Apu_Data\\Cobb&Translog\\Profit_Private.csv",sep=',',header=T)
+str(sfa_dat_P_Pri)
+attach(sfa_dat_P_Pri)
+
+sfa_dat_P_Pri$Profit <- as.numeric(Profit)
+sfa_dat_P_Pri$LOAN <- as.numeric(LOAN)
+sfa_dat_P_Pri$NonInterestIncome<- as.numeric(NonInterestIncome)
+sfa_dat_P_Pri$NonPerformingLoan<- as.numeric(NonPerformingLoan)
+#Managing Data 
+sfa_dat_P_Pri$Profitlog_P_Pri <- log(sfa_dat_P_Pri$Profit)
+sfa_dat_P_Pri$Loanlog_P_Pri <- log(sfa_dat_P_Pri$LOAN)
+sfa_dat_P_Pri$OffBalanceSheetItemlog_P_Pri <- log(OffBalanceSheetItem)
+sfa_dat_P_Pri$OtherEarningAssetslog_P_Pri <- log(OtherEarningAssets)
+sfa_dat_P_Pri$POFlog_P_Pri <- log(POF)
+sfa_dat_P_Pri$POFAlog_P_Pri <- log(POFA)
+sfa_dat_P_Pri$POLlog_P_Pri <- log(POL)
+sfa_dat_P_Pri$NonInterestIncomelog_P_Pri <- log(sfa_dat_P_Pri$NonInterestIncome)
+sfa_dat_P_Pri$NonPerformingLoanlog_P_Pri <- log(sfa_dat_P_Pri$NonPerformingLoan)
+sfa_dat_P_Pri$ReturnOnAssetslog_P_Pri <- log(ReturnOnAssets)
+sfa_dat_P_Pri$ReturnOnEquitylog_P_Pri <- log(ReturnOnEquity)
+sfa_dat_P_Pri$CapitalAdequacyRatiolog_P_Pri <- log(CapitalAdequacyRatio)
+
+
+# Cobb-Douglas production frontier
+str(sfa_dat_P_Pri)
+sfa_Panel_P_Pri <- pdata.frame(sfa_dat_P_Pri)
+cobbDouglas_P_Pri <- frontier::sfa(Profitlog_P_Pri ~ Loanlog_P_Pri + OffBalanceSheetItemlog_P_Pri 
+                                   + POFlog_P_Pri + POFAlog_P_Pri + POLlog_P_Pri ,
+                                   timeEffect = T, 
+                                   data= sfa_Panel_P_Pri )
+
+summary(cobbDouglas_P_Pri)
+
+summary( cobbDouglas_P_Pri, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
+lrtest(translog_P_Pri,cobbDouglas_P_Pri)
+
+# estimate the translog function
+
+translog_P_Pri <- frontierQuad( yName = "Profitlog_P_Pri",
+                                xNames = c( "Loanlog_P_Pri", "OffBalanceSheetItemlog_P_Pri",
+                                            "POFlog_P_Pri", "POFAlog_P_Pri", "POLlog_P_Pri"),
+                                data = sfa_Panel_P_Pri)
+
+
+translog_P_Pri
+sink("output.csv")
+summary(translog_P_Pri)
+sink()
+
+summary( translog_P_Pri, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
+
+
+#Cost_Public
+sfa_dat_C_Pub <- read.table("G:\\Apu_Data\\Cobb&Translog\\Cost_Public.csv",sep=',',header=T)
+str(sfa_dat_C_Pub)
+
+#Managing Data 
+sfa_dat_C_Pub$OperatingCostlog_C_Pub <- log(sfa_dat_C_Pub$OperatingCost)
+sfa_dat_C_Pub$Loanlog_C_Pub <- log(sfa_dat_C_Pub$LOAN)
+sfa_dat_C_Pub$OffBalanceSheetItemlog_C_Pub <- log(sfa_dat_C_Pub$OffBalanceSheetItem)
+sfa_dat_C_Pub$OtherEarningAssetslog_C_Pub <- log(sfa_dat_C_Pub$OtherEarningAssets)
+sfa_dat_C_Pub$POFlog_C_Pub <- log(sfa_dat_C_Pub$POF)
+sfa_dat_C_Pub$POFAlog_C_Pub <- log(sfa_dat_C_Pub$POFA)
+sfa_dat_C_Pub$POLlog_C_Pub <- log(sfa_dat_C_Pub$POL)
+sfa_dat_C_Pub$NonInterestIncomelog_C_Pub <- log(sfa_dat_C_Pub$NonInterestIncome)
+sfa_dat_P_Pub$NonPerformingLoanlog_P_Pub <- log(sfa_dat_P_Pub$NonPerformingLoan)
+sfa_dat_C_Pub$ReturnOnAssetslog_C_Pub <- log(sfa_dat_C_Pub$ReturnOnAssets)
+sfa_dat_C_Pub$ReturnOnEquitylog_C_Pub <- log(sfa_dat_C_Pub$ReturnOnEquity)
+sfa_dat_C_Pub$CapitalAdequacyRatiolog_C_Pub <- log(sfa_dat_C_Pub$CapitalAdequacyRatio)
+
+
+# Cobb-Douglas production frontier
+sfa_Panel_C_Pub <- pdata.frame(sfa_dat_C_Pub)
+cobbDouglas_C_Pub <- frontier::sfa(OperatingCostlog_C_Pub ~ Loanlog_C_Pub 
+                                   + OffBalanceSheetItemlog_C_Pub
+                                   + POFlog_C_Pub 
+                                   + POFAlog_C_Pub 
+                                   + POLlog_C_Pub,
+                                   timeEffect = T,
+                                   data =sfa_Panel_C_Pub)
+
+summary(cobbDouglas_C_Pub)
+summary( cobbDouglas_C_Pub, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+lrtest(translog_C_Pub,cobbDouglas_C_Pub)
+# estimate the translog function
+translog_C_Pub <- frontierQuad( yName = "OperatingCostlog_C_Pub",
+                                xNames = c( "Loanlog_C_Pub",
+                                            "OffBalanceSheetItemlog_C_Pub",
+                                            "POFlog_C_Pub", 
+                                            "POFAlog_C_Pub",
+                                            "POLlog_C_Pub"),
+                                data = sfa_Panel_C_Pub)
+
+translog_C_Pub
+
+
+sink("output1.txt")
+summary(translog_C_Pub)
+sink()
+summary( translog_C_Pub, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
+
+#Cost_Private
+sfa_dat_C_Pri  <- read.table("G:\\Apu_Data\\Cobb&Translog\\Cost_Private.csv",sep=',',header=T)
+str(sfa_dat_C_Pri)
+attach(sfa_dat_C_Pri)
+sfa_dat_C_Pri$OperatingCost <- as.numeric(OperatingCost)
+sfa_dat_C_Pri$LOAN <- as.numeric(LOAN)
+sfa_dat_C_Pri$NonInterestIncome<- as.numeric(NonInterestIncome)
+
+#Managing Data 
+sfa_dat_C_Pri$OperatingCostlog_C_Pri  <- log(sfa_dat_C_Pri$OperatingCost)
+sfa_dat_C_Pri$Loanlog_C_Pri  <- log(sfa_dat_C_Pri$LOAN)
+sfa_dat_C_Pri$OffBalanceSheetItemlog_C_Pri  <- log(OffBalanceSheetItem)
+sfa_dat_C_Pri$OtherEarningAssetslog_C_Pri  <- log(OtherEarningAssets)
+sfa_dat_C_Pri$POFlog_C_Pri  <- log(POF)
+sfa_dat_C_Pri$POFAlog_C_Pri  <- log(POFA)
+sfa_dat_C_Pri$POLlog_C_Pri  <- log(POL)
+sfa_dat_C_Pri$NonInterestIncomelog_C_Pri  <- log(sfa_dat_C_Pri$NonInterestIncome)
+sfa_dat_P_Pri$NonPerformingLoanlog_P_Pri <- log(sfa_dat_P_Pri$NonPerformingLoan)
+sfa_dat_C_Pri$ReturnOnAssetslog_C_Pri  <- log(ReturnOnAssets)
+sfa_dat_C_Pri$ReturnOnEquitylog_C_Pri  <- log(ReturnOnEquity)
+sfa_dat_C_Pri$CapitalAdequacyRatiolog_C_Pri  <- log(CapitalAdequacyRatio)
+
+
+# Cobb-Douglas production frontier
+str(sfa_dat_C_Pri )
+sfa_Panel_C_Pri  <- pdata.frame(sfa_dat_C_Pri )
+cobbDouglas_C_Pri  <- frontier::sfa(OperatingCostlog_C_Pri  ~ Loanlog_C_Pri  
+                                    + OffBalanceSheetItemlog_C_Pri  
+                                    + POFlog_C_Pri
+                                    + POFAlog_C_Pri
+                                    + POLlog_C_Pri,
+                                    data = sfa_Panel_C_Pri ,timeEffect = T)
+
+summary(cobbDouglas_C_Pri )
+
+summary( cobbDouglas_C_Pri, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+lrtest(translog_C_Pri,cobbDouglas_C_Pri)
+# estimate the translog function
+translog_C_Pri <- frontierQuad( yName = "OperatingCostlog_C_Pri",
+                                xNames = c( "Loanlog_C_Pri", 
+                                            "OffBalanceSheetItemlog_C_Pri",
+                                            "POFlog_C_Pri",
+                                            "POFAlog_C_Pri",
+                                            "POLlog_C_Pri"), data = sfa_dat_C_Pri)
+
+translog_C_Pri
+
+
+sink("output2.txt")
+summary(translog_C_Pri)
+sink()
+
+summary( translog_C_Pri, extraPar = FALSE, effic = T,
+         logDepVar = TRUE,  farrell = TRUE)
+
